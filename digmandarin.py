@@ -20,6 +20,8 @@ Notes:
 - v = u with double dot
 '''
 
+import argparse
+from collections import defaultdict
 import os
 import os.path
 import random
@@ -46,6 +48,8 @@ FINALS = [
 ]
 
 AUDIO_FORMAT = '.mp3'
+
+TONES = (1, 2, 3, 4)
 
 class PinyinLink:
     def __init__(self, initial, final, tone):
@@ -92,7 +96,7 @@ def get_links():
     ret = [ ]
     for initial in INITIALS.keys():
         for final in FINALS:
-            for tone in (1, 2, 3, 4):
+            for tone in TONES:
                 ret.append(PinyinLink(initial, final, tone))
     return ret
 
@@ -126,6 +130,35 @@ def download_files(datadir):
             else:
                 raise
 
+def create_anki_text_file(datadir, ankifile):
+    pinyin_tones = get_existing_pinyin_tones(datadir)
+    pinyin2tones = defaultdict(set)
+    for pyt in pinyin_tones:
+        py, t = pyt[:-1], int(pyt[-1])
+        pinyin2tones[py].add(t)
+    print('Writing to: %s' % ankifile)
+    with open(ankifile, 'w') as fanki:
+        for py, tones in pinyin2tones.items():
+            if len(tones) != len(TONES):
+                print('WARN: found %d tones for %s' % (len(tones), py))
+                continue
+            fields = [py,] \
+                   + ['[sound:%s%d.mp3]' % (py, t) for t in TONES] \
+                   + ['', '']
+            fanki.write('%s\n' % '\t'.join(fields))
+
 if __name__ == '__main__':
-    datadir = './sounds'
-    download_files(datadir)
+    parser = argparse.ArgumentParser(description='Digmandarin pinyin sounds')
+    parser.add_argument('--download', dest='download', action='store_true')
+    parser.add_argument('--no-download', dest='download', action='store_false')
+    parser.set_defaults(download=False)
+    parser.add_argument('--anki', dest='anki', action='store_true')
+    parser.add_argument('--no-anki', dest='anki', action='store_false')
+    parser.set_defaults(anki=False)
+    parser.add_argument('--datadir', default='./sounds', help='sound files path')
+    parser.add_argument('--ankifile', default='./anki.txt', help='anki file path')
+    args = parser.parse_args()
+    if args.download:
+        download_files(args.datadir)
+    if args.anki:
+        create_anki_text_file(args.datadir, args.ankifile)
