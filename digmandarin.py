@@ -78,31 +78,11 @@ class PinyinLink:
                         (initial, final))
 
     def get_pinyin_tone(self, initial, final, tone):
-        initial_final = '%s%s' % (initial, final)
-        if initial == '':
-            initial_final = self.get_pinyin(initial, final)
-        return '%s%d' % (initial_final, tone)
+        return '%s%d' % (self.get_pinyin(initial, final), tone)
 
     def get_url(self, initial, pinyin_tone):
         return 'https://www.digmandarin.com/tools/sounds/%s/%s/Audio%s' %\
                (INITIALS[initial], pinyin_tone, AUDIO_FORMAT)
-
-def UNUSED_is_valid_initial_final(initial, final):
-    '''
-    Return whether the combination (initial, final) is valid according to
-    from https://www.digmandarin.com/chinese-pinyin-chart.
-
-    Pre-conditions: initial is valid and final is valid
-    '''
-    if initial in ('j', 'q', 'x',):
-        return final.startswith('i') or final.startswith('v')
-    if initial in ('zh', 'ch', 'sh',):
-        return not final.startswith('i') and \
-               not final.startswith('v') and \
-               final != 'ueng' and \
-               final != 'er' and \
-               final != 'o'
-    return True
 
 def get_links():
     '''
@@ -129,7 +109,7 @@ def download_files(datadir):
     random.shuffle(all_links)
     links = [l for l in all_links if l.pinyin_tone not in skip]
     print('Downloading %d sound files (%d total files, %d already downloaded '\
-          'in %s' % (len(links), len(all_links), len(skip), datadir))
+          'in %s)' % (len(links), len(all_links), len(skip), datadir))
     for i, l in enumerate(links):
         outfname = '%s/%s%s' % (datadir, l.pinyin_tone, AUDIO_FORMAT)
         if (l.initial, l.final) in skip_other_tones:
