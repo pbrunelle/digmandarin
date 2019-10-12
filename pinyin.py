@@ -41,7 +41,7 @@ def get_existing_pinyin_tones(datadir, prefix, fmt):
                 for fname in os.listdir(datadir) \
                 if fname.endswith(fmt) and fname.startswith(prefix)])
 
-def download_files(all_links, datadir, prefix, fmt):
+def download_files(all_links, datadir, prefix, fmt, error_fn=None):
     os.makedirs(datadir, exist_ok=True)
     skip = get_existing_pinyin_tones(datadir, prefix, fmt)
     skip_other_tones = set()
@@ -58,6 +58,10 @@ def download_files(all_links, datadir, prefix, fmt):
               (i+1, len(links), l.url(), outfname))
         try:
             urllib.request.urlretrieve(l.url(), outfname)
+            if error_fn and error_fn(outfname):
+                os.unlink(outfname)
+                skip_other_tones.add(l.pinyin())
+                print('not a sound file, skiping other tones of same pinyin')
         except urllib.error.HTTPError as e:
             if e.code in (403, 404):
                 skip_other_tones.add(l.pinyin())
