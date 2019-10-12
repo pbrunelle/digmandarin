@@ -1,13 +1,19 @@
 # digmandarin
 
-To download sound files from [digmandarin](https://www.digmandarin.com/chinese-pinyin-chart):
+To download sound files from [digmandarin](https://www.digmandarin.com/chinese-pinyin-chart)
+into `digmandarin/*.mp3` and create Anki cards to learn to recognize the sounds:
 
 ```bash
 ./digmandarin.py --download
+./digmandarin.py --anki
 ```
 
-Then, to create Anki cards to learn the sounds from the pinyin (and vice versa):
+# yabla
+
+To download sound files from [yabla](https://chinese.yabla.com/chinese-pinyin-chart.php)
+into `yabla/yabla-*.mp3:` and create Anki cards to learn to recognize the sounds:
 
 ```bash
-./digmandarin.py --anki
+./yabla.py --download
+./yabla.py --anki
 ```

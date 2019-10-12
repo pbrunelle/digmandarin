@@ -1,4 +1,6 @@
 *.swp
+anki-*.txt
+sounds-*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

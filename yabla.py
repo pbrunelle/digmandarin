@@ -1,38 +1,24 @@
 #!/usr/bin/env python3
 
 '''
-Here are the patterns I have observed:
+Download sound files from yabla and create Anki cards
 
-Initial  Final  Tone  URL
------------------------------------------------
-<none>   ai     2     .../row1/wai2/Audio.mp3
-p        eng    4     .../BPMF/peng4/Audio.mp3
-f        u      2     .../BPMF/fu2/Audio.mp3
-n        ve*    1     .../DTNL/nve1/Audio.mp3
-t        ou     1     .../DTNL/tou1/Audio.mp3
-k        uang   4     .../GKH/kuang4/Audio.mp3
-c        ui     3     .../ZCS/cui3/Audio.mp3
-r        ua     1     .../ZHCHSH/rua1/Audio.mp3
-x        iong   3     .../JQX/xiong3/Audio.mp3
-
-Notes:
-- All URLs start with https://www.digmandarin.com/tools/sounds
-- v = u with double dot
+https://yabla.vo.llnwd.net/media.yabla.com/chinese_static/audio/alicia/qu4.mp3
 '''
 
 import argparse
 import random
 import pinyin
 
-INITIALS = {
-    '': 'row1',
-    'b': 'BPMF', 'p': 'BPMF', 'm': 'BPMF', 'f': 'BPMF',
-    'd': 'DTNL', 't': 'DTNL', 'n': 'DTNL', 'l': 'DTNL',
-    'g': 'GKH', 'k': 'GKH', 'h': 'GKH',
-    'z': 'ZCS', 'c': 'ZCS', 's': 'ZCS',
-    'zh': 'ZHCHSH', 'ch': 'ZHCHSH', 'sh': 'ZHCHSH', 'r': 'ZHCHSH',
-    'j': 'JQX', 'q': 'JQX', 'x': 'JQX',
-}
+INITIALS = [
+    '',
+    'b', 'p', 'm', 'f',
+    'd', 't', 'n', 'l',
+    'g', 'k', 'h',
+    'z', 'c', 's',
+    'zh', 'ch', 'sh', 'r',
+    'j', 'q', 'x',
+]
 
 FINALS = [
     'a', 'ai', 'an', 'ang', 'ao',
@@ -45,7 +31,7 @@ FINALS = [
 
 AUDIO_FORMAT = '.mp3'
 
-class DigMandarinLink(pinyin.PinyinLink):
+class YablaLink(pinyin.PinyinLink):
     def pinyin(self):
         return self._pinyin
     def pinyin_tone(self):
@@ -58,8 +44,8 @@ class DigMandarinLink(pinyin.PinyinLink):
         self._tone = tone
         self._pinyin = self.get_pinyin(initial, final)
         self._pinyin_tone = '%s%d' % (self.get_pinyin(initial, final), tone)
-        self._url = 'https://www.digmandarin.com/tools/sounds/%s/%s/Audio%s' %\
-                    (INITIALS[initial], self._pinyin_tone, AUDIO_FORMAT)
+        self._url = 'https://yabla.vo.llnwd.net/media.yabla.com/chinese_static/audio/alicia/%s%s' %\
+                    (self._pinyin_tone, AUDIO_FORMAT)
     def get_pinyin(self, initial, final):
         if initial != '':
             return '%s%s' % (initial, final)
@@ -82,32 +68,29 @@ class DigMandarinLink(pinyin.PinyinLink):
                         (initial, final))
 
 def get_links():
-    '''
-    Return [PinyinLink, ...] for valid combinations (final, initial)
-    from https://www.digmandarin.com/chinese-pinyin-chart
-    '''
     ret = [ ]
-    for initial in INITIALS.keys():
+    for initial in INITIALS:
         for final in FINALS:
             for tone in pinyin.TONES:
-                ret.append(DigMandarinLink(initial, final, tone))
+                ret.append(YablaLink(initial, final, tone))
     return ret
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Digmandarin pinyin sounds')
+    SITE = 'yabla'
+    parser = argparse.ArgumentParser(description='Yabla pinyin sounds')
     parser.add_argument('--download', dest='download', action='store_true')
     parser.add_argument('--no-download', dest='download', action='store_false')
     parser.set_defaults(download=False)
     parser.add_argument('--anki', dest='anki', action='store_true')
     parser.add_argument('--no-anki', dest='anki', action='store_false')
     parser.set_defaults(anki=False)
-    parser.add_argument('--datadir', default='./sounds-digmandarin', help='sound files path')
-    parser.add_argument('--prefix', default='', help='prefix to add to all sound files')
-    parser.add_argument('--ankifile', default='./anki-digmandarin.txt', help='anki file path')
+    parser.add_argument('--datadir', default='./sounds-%s' % SITE, help='sound files path')
+    parser.add_argument('--prefix', default='%s-' % SITE, help='prefix to add to all sound files')
+    parser.add_argument('--ankifile', default='./anki-%s.txt' % SITE, help='anki file path')
     args = parser.parse_args()
     if args.download:
         links = get_links()
-        random.shuffle(links)
+        # random.shuffle(links)
         pinyin.download_files(links, args.datadir, args.prefix, AUDIO_FORMAT)
     if args.anki:
-        pinyin.create_anki_text_file(args.datadir, args.prefix, AUDIO_FORMAT, 'digmandarin', args.ankifile)
+        pinyin.create_anki_text_file(args.datadir, args.prefix, AUDIO_FORMAT, SITE, args.ankifile)
